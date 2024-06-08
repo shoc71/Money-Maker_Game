@@ -8,12 +8,18 @@ def income(random_number_1, random_number_2):
 # lowest - 5
 # highest - 100
 jobs ={
+    "actor" : income(15, 50),
+    "witch" : income(7, 33),
     "doctor" : income(10, 100),
     "golfer" : income(42, 69),
     "police" : income(23, 41),
+    "wizard" : income(17, 77),
+    "lawyer" : income (60, 79),
     "cashier" : income(5, 15),
     "janitor" : income(10, 15),
     "manager" : income(13, 50),
+    "associate" : income(1, 100),
+    "baby maker" : income(1, 10),
     "firefighter" : income(32, 41),
     "pet groomer" : income(0, 20),
     "bridge maker" : income(45, 65)

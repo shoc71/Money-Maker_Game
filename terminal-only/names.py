@@ -6,11 +6,20 @@ names = [
     "loop",
     "boost",
     "token",
+    'eye',
+    'robin',
     "member",
     "Toast",
     "jory",
+    'window',
     'buttwood',
     'jace',
     'nosle',
-    'tummy'
+    'tummy',
+    'wesley',
+    'timmy',
+    'raj',
+    'arnav',
+    'bhanni',
+    'maple'
 ]

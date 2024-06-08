@@ -46,7 +46,24 @@ def clear_terminal():
 def new_line():
     return print("\n")
 
-# def to_continue():
+@dataclass
+class Player:
+    """
+    Represents a player with a name, age, job title, job income, and bank balance.
+    
+    Attributes:
+        name (str): The name of the player.
+        age (int): The age of the player.
+        job_title (str): The job title of the player.
+        job_income (float): The job income of the player.
+        bank (float): The bank balance of the player.
+    """
+    id : int
+    name: str
+    age: int
+    job_title: str
+    job_income: float
+    bank: float
 
 class GameLogic:
     """
@@ -74,38 +91,156 @@ class GameLogic:
         """
         player.bank += player.job_income
         player.bank = round(player.bank, 2)
-        log(f"{player.name} worked and earned ${player.job_income}. Bank balance updated to ${player.bank}.")
+        log(f"{player.name} has worked and earned ${player.job_income}. Bank balance updated to ${player.bank}.")
 
-    def steal_player_money(self):
+    def view_other_player_profiles(self, players):
         """
-        Placeholder for logic to steal player money.
+        Allows the current player to view the profiles of other players.
         """
-        pass
+        while True:
+            try:
+                player_id = int(input("Enter the player ID you want to view (0 to cancel): "))
+                if player_id == 0:
+                    clear_terminal()
+                    break
+                player = self.get_player_by_id(players, player_id)
+                if player:
+                    self.player_description(player)
+                    new_line()
+                else:
+                    log("Invalid player ID. Please try again.")
+            except ValueError:
+                log("Invalid input. Please enter a valid player ID.")
 
-    def treasure(self):
+    def get_player_by_id(self, players, player_id):
         """
-        Placeholder for logic related to treasures.
+        Retrieves a player by their ID.
+        
+        Args:
+            player_id (int): The ID of the player to retrieve.
+        
+        Returns:
+            Player: The Player instance with the given ID, or None if not found.
         """
-        pass
-
-@dataclass
-class Player:
-    """
-    Represents a player with a name, age, job title, job income, and bank balance.
+        for player in players:
+            if player.id == player_id:
+                return player
+        return None
     
-    Attributes:
-        name (str): The name of the player.
-        age (int): The age of the player.
-        job_title (str): The job title of the player.
-        job_income (float): The job income of the player.
-        bank (float): The bank balance of the player.
-    """
-    id : int
-    name: str
-    age: int
-    job_title: str
-    job_income: float
-    bank: float
+    def player_description(self, player):
+        """
+        Displays the player's description.
+        
+        Args:
+            player (Player): The Player instance to describe.
+        """
+        log(f"Player #{player.id} Information:")
+        log(f"  Name: {player.name};")
+        log(f"  Age: {player.age};")
+        log(f"  Job Title: {player.job_title};")
+        log(f"  Job Income: ${player.job_income};")
+        log(f"  Bank Balance: ${player.bank}")
+
+    def steal(self, player, players):
+        """
+        Allows the player to attempt to steal a percentage of another player's savings.
+
+        Args:
+            player (Player): The Player instance attempting the steal.
+            players (list): The list of all players in the game.
+        """
+        while True:
+            try:
+                target_id = int(input("Enter the player ID you want to steal from (0 to cancel): "))
+                if target_id == 0:
+                    clear_terminal()
+                    return False
+                if target_id == player.id:
+                    log("You cannot steal from yourself. Choose another player.")
+                    continue
+                target_player = self.get_player_by_id(players, target_id)
+                if target_player:
+                    success_rate = random.random()
+                    if success_rate > 0.5:  # 50% chance of success
+                        percentage = random.uniform(0.1, 0.3)  # Steal between 10% and 30%
+                        amount_stolen = target_player.bank * percentage
+                        target_player.bank -= amount_stolen
+                        player.bank += amount_stolen
+                        target_player.bank = round(target_player.bank, 2)
+                        player.bank = round(player.bank, 2)
+                        log(f"Steal successful! {player.name} stole ${amount_stolen:.2f} from {target_player.name}.")
+                        log(f"{target_player.name}'s new bank balance is ${target_player.bank:.2f}.")
+                        log(f"{player.name}'s new bank balance is ${player.bank:.2f}.")
+                    else:
+                        log(f"Steal attempt failed! {player.name} couldn't steal from {target_player.name}.")
+                    return True
+                else:
+                    log("Invalid player ID. Please try again.")
+            except ValueError:
+                log("Invalid input. Please enter a valid player ID.")
+
+    def search(self, player):
+        """
+        Allows the player to choose an item to search for and potentially gain a reward.
+
+        This method presents the player with a menu of search options: treasure, lottery ticket, and stocks.
+        Based on the player's choice, the player can earn a random amount of money, which is added to their bank balance.
+        The player can also choose to go back to the player turn menu.
+
+        Args:
+            player (Player): The player who is performing the search.
+
+        Returns:
+            bool: True if the player completed a search action, False if they chose to go back to the player turn menu.
+        """
+
+        options = {
+            "1": "treasure",
+            "2": "lottery ticket",
+            "3": "stocks",
+            "0": "back"
+        }
+        
+        while True:
+            new_line()
+            log("Search options:")
+            for key, value in options.items():
+                log(f"  {key}. {value.title()}")
+            
+            choice = input("Choose what to search for (0 to go back): ")
+            
+            if choice == "0":
+                clear_terminal()
+                return False
+            
+            search_item = options.get(choice)
+
+            lottery_ticket_rewards = [-5, 0, 1, 5, 10, 20, 25, 50, 100, 1_000, 1_000_000]
+
+            if search_item:
+                reward = 0
+                
+                if search_item in ["treasure", 't', '1']:
+                    reward = random.uniform(-100, 1000)
+                    log(f"{player.name} found a treasure worth ${reward:.2f}!")
+
+                elif search_item in ["lottery ticket", 'l', '2', 'lottery', 'ticket']:
+                    reward = random.choice(lottery_ticket_rewards)
+                    log(f"{player.name} bought a lottery ticket and won ${reward:.2f}!")
+
+                elif search_item in ["stocks", 's', '3']:
+                    reward = random.uniform(-500_000, 1_500_000)
+                    log(f"{player.name} invested in stocks and now has ${reward:.2f}!")
+
+                
+                player.bank += reward
+                player.bank = round(player.bank, 2)
+                new_line()
+                log(f"{player.name}'s new bank balance is ${player.bank:.2f}.")
+                return True
+            
+            else:
+                log("Invalid choice. Please choose a valid option.")
 
 class Startup:
     """
@@ -199,9 +334,9 @@ class Startup:
             log(f"   Player #{player.id};")
             log(f"   Name: {player.name};")
             log(f"   Age: {player.age};")
-            log(f"   Job Title: {player.job_title},")
-            log(f"   Job Income: {player.job_income},")
-            log(f"   Bank: {player.bank}")
+            log(f"   Job Title: {player.job_title};")
+            log(f"   Job Income: ${player.job_income};")
+            log(f"   Bank: ${player.bank}")
             # log(f"")
             # log(f"")
             new_line()
@@ -226,19 +361,6 @@ class Startup:
         if custom_name:
             player.name = custom_name
             clear_terminal()
-
-    # def change_specific_name(self, players):
-    #     """
-    #     Allows a specific player to change their name.
-        
-    #     Args:
-    #         players (list): A list of Player instances.
-    #     """
-    #     player_index = int(input("Enter the player index to change their name (1 to n): ")) - 1
-    #     if 0 <= player_index < len(players):
-    #         self.enter_custom_name(players[player_index])
-    #     else:
-    #         log("Invalid player index.")
 
     def restart_start_setup(self):
         """
@@ -303,19 +425,25 @@ class GamePlay:
 
     def print_player_options(self, player):
         """
-        Prints the options available to a player during their turn.
+        Prints the options available to a player during their turn using a dictionary.
         
         Args:
             player (Player): The Player instance whose turn it is.
         """
+        options = {
+            0: "Player Description",
+            1: "Work",
+            2: "Steal",
+            3: "Search",
+            4: "Use Item",
+            5: "End Turn"
+        }
+
+        new_line()
         log(f"It's Player #{player.id}'s turn.")
         log("Options:")
-        log("0. Player Despriction")
-        log("1. Work")
-        log("2. Steal")
-        log("3. Search")
-        log("4. Use Item")
-        log("5. End Turn")
+        for key, value in options.items():
+            log(f"  {key}. {value}")
     
     def player_turn(self, player):
         """
@@ -324,9 +452,8 @@ class GamePlay:
         Args:
             player (Player): The Player instance whose turn it is.
         """
-        
         turn = 0
-
+        
         while True:
             
             if turn >= 5:
@@ -339,12 +466,11 @@ class GamePlay:
             self.print_player_options(player)
 
             player_actions = input(f"Choose your action, Player #{player.id}: ").lower()
-            if (player_actions == "0") or (player_actions == "despriction"):
-                clear_terminal()
-                self.view_other_player_profiles()
-                new_line()
 
-            elif (player_actions == "1") or (player_actions == "work"):
+            if player_actions in ["0", "despriction", "player despriction", "d"]:
+                self.gamelogic.view_other_player_profiles(self.players)
+
+            elif player_actions in ["1", "work", "w"]:
                 new_line()
                 self.gamelogic.work(player)
                 turn += 4
@@ -352,11 +478,21 @@ class GamePlay:
                 clear_terminal()
 
             elif player_actions == "2":
-                self.steal(player)
+                self.gamelogic.steal(player, players)
+                turn += 1
+                input("Press [Enter key] to continue...")
+                clear_terminal()
+
             elif player_actions == "3":
-                self.search(player)
+                new_line()
+                self.gamelogic.search(player)
+                turn += 6
+                input("Press [Enter key] to continue...")
+                clear_terminal()
+
             elif player_actions == "4":
                 self.use_item(player)
+
             elif player_actions == "5":
                 new_line()
                 log(f"Player #{player.id} turn has voted to end their turn.")
@@ -366,54 +502,6 @@ class GamePlay:
 
             else:
                 log("Invalid action. Choose between 0 and 5.")
-
-    def view_other_player_profiles(self):
-        """
-        Allows the current player to view the profiles of other players.
-        """
-        while True:
-            try:
-                player_id = int(input("Enter the player ID you want to view (0 to cancel): "))
-                if player_id == 0:
-                    clear_terminal()
-                    break
-                player = self.get_player_by_id(player_id)
-                if player:
-                    self.player_description(player)
-                    new_line()
-                else:
-                    log("Invalid player ID. Please try again.")
-            except ValueError:
-                log("Invalid input. Please enter a valid player ID.")
-
-    def get_player_by_id(self, player_id):
-        """
-        Retrieves a player by their ID.
-        
-        Args:
-            player_id (int): The ID of the player to retrieve.
-        
-        Returns:
-            Player: The Player instance with the given ID, or None if not found.
-        """
-        for player in self.players:
-            if player.id == player_id:
-                return player
-        return None
-    
-    def player_description(self, player):
-        """
-        Displays the player's description.
-        
-        Args:
-            player (Player): The Player instance to describe.
-        """
-        log(f"Player #{player.id} Information:")
-        log(f"Name: {player.name}")
-        log(f"Age: {player.age}")
-        log(f"Job Title: {player.job_title}")
-        log(f"Job Income: ${player.job_income}")
-        log(f"Bank Balance: ${player.bank}")
     
     def check_game_end(self):
         """
