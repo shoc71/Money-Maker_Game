@@ -70,6 +70,53 @@ class GameLogic:
     Contains the game logic related to jobs, stealing money, and treasures.
     """
      
+    def format_player_bank(self, player):
+        """
+        Formats the bank balances of all players in the game.
+        
+        Args:
+            players (list): A list of Player instances.
+        """
+        player.bank = round(player.bank, 2)
+        player.bank = self.format_currency(player.bank)
+
+    @staticmethod
+    def format_currency(amount):
+        """
+        Formats a currency amount to include commas for thousands and underscores for millions.
+
+        Args:
+            amount (float): The currency amount to be formatted.
+
+        Returns:
+            str: The formatted currency amount.
+        """
+        # Check if the amount is in the millions
+        if abs(amount) >= 1_000_000:
+            whole_part = int(amount // 1_000_000)
+            thousands_part = int((amount % 1_000_000) // 1_000)
+            last_two_digits = int(amount * 100) % 100
+            return f"${whole_part:,}_{thousands_part:03d}_{last_two_digits:02d}"
+        # Check if the amount is in the thousands
+        elif abs(amount) >= 1_000:
+            whole_part = int(amount // 1_000)
+            last_two_digits = int(amount * 100) % 100
+            return f"${whole_part:,}_{last_two_digits:02d}"
+        else:
+            last_two_digits = int(amount * 100) % 100
+            return f"${amount:,.2f}_{last_two_digits:02d}"
+        
+    def check_bank_modifications(self, players):
+        """
+        Checks for any bank modifications among players and formats their currency accordingly.
+        
+        Args:
+            players (list): A list of Player instances.
+        """
+        for player in players:
+            if isinstance(player.bank, float):
+                self.format_player_bank(player)
+
     def get_job(self):
         """
         Randomly selects a job title and job income from the jobs dictionary.
@@ -232,7 +279,7 @@ class GameLogic:
                     reward = random.uniform(-500_000, 1_500_000)
                     log(f"{player.name} invested in stocks and now has ${reward:.2f}!")
 
-                
+                reward = float(reward)
                 player.bank += reward
                 player.bank = round(player.bank, 2)
                 new_line()
@@ -385,7 +432,7 @@ class Startup:
             name = full_name()
             age = random.randint(18, 65)
             job_title, job_income = self.gamelogic.get_job()
-            bank = 400
+            bank = 400.0
             players.append(Player(id, name, age, job_title, job_income, bank))
         return players
 
@@ -410,6 +457,12 @@ class GamePlay:
         self.round_limit = round_limit
         self.gamelogic = gamelogic
 
+    def format_player_banks(self):
+        """
+        Formats the bank balances of all players.
+        """
+        self.gamelogic.check_bank_modifications(self.players)
+
     def start_game(self):
         """
         Starts the game with a turn-based system.
@@ -420,6 +473,7 @@ class GamePlay:
             log(f"\nRound {round_num} begins!")
             for player in self.players:
                 self.player_turn(player)
+                self.format_player_banks()
                 if self.check_game_end():
                     return
 
@@ -525,3 +579,4 @@ if __name__ == "__main__":
     players, round_limit = startup.start_setup()
     gameplay = GamePlay(players, round_limit, gamelogic)
     gameplay.start_game()
+    gameplay.format_player_banks()  # Format player banks after the game ends
