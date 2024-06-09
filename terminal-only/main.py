@@ -91,20 +91,43 @@ class GameLogic:
         Returns:
             str: The formatted currency amount.
         """
-        # Check if the amount is in the millions
-        if abs(amount) >= 1_000_000:
-            whole_part = int(amount // 1_000_000)
-            thousands_part = int((amount % 1_000_000) // 1_000)
-            last_two_digits = int(amount * 100) % 100
-            return f"${whole_part:,}_{thousands_part:03d}_{last_two_digits:02d}"
-        # Check if the amount is in the thousands
-        elif abs(amount) >= 1_000:
-            whole_part = int(amount // 1_000)
-            last_two_digits = int(amount * 100) % 100
-            return f"${whole_part:,}_{last_two_digits:02d}"
-        else:
-            last_two_digits = int(amount * 100) % 100
-            return f"${amount:,.2f}_{last_two_digits:02d}"
+        if isinstance (amount, float):
+            # Check if the amount is in the millions
+            if abs(amount) >= 1_000_000:
+                whole_part = int(amount // 1_000_000)
+                thousands_part = int((amount % 1_000_000) // 1_000)
+                last_two_digits = int(amount * 100) % 100
+                return f"${whole_part:,}_{thousands_part:03d}_{last_two_digits:02d}"
+            # Check if the amount is in the thousands
+            elif abs(amount) >= 1_000:
+                whole_part = int(amount // 1_000)
+                last_two_digits = int(amount * 100) % 100
+                return f"${whole_part:,}_{last_two_digits:02d}"
+            else:
+                return amount
+        elif isinstance (amount, str):
+            return amount
+        
+    @staticmethod
+    def deformat_currency(formatted_amount):
+        """
+        Converts a formatted currency string back to a float.
+        
+        Args:
+            formatted_amount (str): The formatted currency string.
+        
+        Returns:
+            float: The currency amount as a float.
+        """
+        try:
+            if isinstance(formatted_amount, float):
+                return float(formatted_amount)
+            elif isinstance(formatted_amount, str):
+            # Remove the dollar sign, commas, and underscores
+                clean_amount = formatted_amount.replace('$', '').replace(',', '').replace('_', '')
+                return float(clean_amount)
+        except ValueError:
+            raise ValueError(f"Invalid formatted amount: {formatted_amount}")
         
     def check_bank_modifications(self, players):
         """
@@ -262,7 +285,7 @@ class GameLogic:
             
             search_item = options.get(choice)
 
-            lottery_ticket_rewards = [-5, 0, 1, 5, 10, 20, 25, 50, 100, 1_000, 1_000_000]
+            lottery_ticket_rewards = [-5, 0, 1, 5, 10, 20, 25, 50, 100, 1_000, 50_000, 1_000_000]
 
             if search_item:
                 reward = 0
@@ -279,8 +302,8 @@ class GameLogic:
                     reward = random.uniform(-500_000, 1_500_000)
                     log(f"{player.name} invested in stocks and now has ${reward:.2f}!")
 
-                reward = float(reward)
-                player.bank += reward
+                print(f"Player Bank : ${player.bank} and type is {type(player.bank)}\nReward : ${reward} and type is {type(reward)}")
+                player.bank = float(self.deformat_currency(player.bank)) + reward # Convert bank balance to float before adding
                 player.bank = round(player.bank, 2)
                 new_line()
                 log(f"{player.name}'s new bank balance is ${player.bank:.2f}.")
@@ -326,7 +349,7 @@ class Startup:
                 round_limit = self.get_round_limit()
                 return players, round_limit
             else:
-                return self.start_setup()
+                self.ready_to_start()
 
         except ValueError:
             log("Error. Invalid input. Please input an integer.")
@@ -339,17 +362,18 @@ class Startup:
         Returns:
             bool: True if all players are ready, False otherwise.
         """
-        ready = input("Are you ready to start the game? (yes/no): ").lower()
-        if (ready == "yes") or (ready == "y") or (ready == "1"):
-            clear_terminal()
-            return True
-        elif (ready == "no") or (ready == "n") or (ready == "0"):
-            input("Press the [Enter key] when you are ready to start the game...")
-            clear_terminal()
-            return True
-        else:
-            print("Please input a valid response. ")
-            self.ready_to_start()
+        while True:
+            ready = input("Are you ready to start the game? (yes/no): ").lower()
+            if (ready in ["yes", "y", "1"]):
+                clear_terminal()
+                return True
+            elif (ready == "no") or (ready == "n") or (ready == "0"):
+                input("Press the [Enter key] when you are ready to start the game...")
+                clear_terminal()
+                return True
+            else:
+                print("Please input a valid response. ")
+            
 
     def get_round_limit(self):
         """
