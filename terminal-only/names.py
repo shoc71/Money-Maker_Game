@@ -6,6 +6,8 @@ names = [
     "loop",
     "boost",
     "token",
+    'booper',
+    'dopper',
     'eye',
     'robin',
     "member",

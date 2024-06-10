@@ -126,7 +126,7 @@ class GameLogic:
             # Convert to float
             return float(cleaned_amount)
             
-        elif isinstance( formatted_amount, (int, float)):
+        elif isinstance(formatted_amount, (int, float)):
             return float(formatted_amount)
         
         else:
@@ -173,7 +173,7 @@ class GameLogic:
         """
         while True:
             try:
-                player_id = int(input("Enter the player ID you want to view (0 to cancel): "))
+                player_id = Security.get_validated_int("Enter the player ID you want to view (0 to cancel): ", range(1, (len(players) + 1)))
                 if player_id == 0:
                     clear_terminal()
                     break
@@ -225,7 +225,7 @@ class GameLogic:
         """
         while True:
             try:
-                target_id = int(input("Enter the player ID you want to steal from (0 to cancel): "))
+                target_id = Security.get_validated_int("Enter the player ID you want to steal from (0 to cancel): ", range(1, (len(players) + 1)))
                 if target_id == 0:
                     clear_terminal()
                     return False
@@ -360,7 +360,7 @@ class Startup:
                 log("Invalid number of players. Please choose between 1 and 8.")
                 return self.start_setup()
 
-            players = self.getting_player_info(number_of_users)
+            players = self.adding_players_info(number_of_users)
             self.print_player_details(players)
             if self.ready_to_start():
                 round_limit = self.get_round_limit()
@@ -440,7 +440,7 @@ class Startup:
             players (list): A list of Player instances.
         """
         log("\nEnter your custom name player -> (first name, last name):")
-        custom_name = input(f"Enter your custom name, Player #{player.id}: ")
+        custom_name = self.security.sanitize_input(input(f"Enter your custom name, Player #{player.id}: "))
         if custom_name:
             player.name = custom_name
             clear_terminal()
@@ -452,7 +452,7 @@ class Startup:
         log("Let's try this again.")
         self.start_setup()
 
-    def getting_player_info(self, number_of_users):
+    def adding_players_info(self, number_of_users):
         """
         Creates a list of Player instances with random information.
         
