@@ -3,6 +3,7 @@ from job_income import jobs
 from names import names
 from dataclasses import dataclass
 import os
+from Input_Handling import Security
 
 def log(message):
     """
@@ -46,6 +47,9 @@ def clear_terminal():
 def new_line():
     return print("\n")
 
+def new_window():
+    return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
+
 @dataclass
 class Player:
     """
@@ -83,51 +87,50 @@ class GameLogic:
     @staticmethod
     def format_currency(amount):
         """
-        Formats a currency amount to include commas for thousands and underscores for millions.
+        Formats a currency amount to include underscores for thousands and millions.
 
         Args:
-            amount (float): The currency amount to be formatted.
+            amount (float or int): The currency amount to be formatted.
 
         Returns:
             str: The formatted currency amount.
         """
-        if isinstance (amount, float):
-            # Check if the amount is in the millions
-            if abs(amount) >= 1_000_000:
-                whole_part = int(amount // 1_000_000)
-                thousands_part = int((amount % 1_000_000) // 1_000)
-                last_two_digits = int(amount * 100) % 100
-                return f"${whole_part:,}_{thousands_part:03d}_{last_two_digits:02d}"
-            # Check if the amount is in the thousands
-            elif abs(amount) >= 1_000:
-                whole_part = int(amount // 1_000)
-                last_two_digits = int(amount * 100) % 100
-                return f"${whole_part:,}_{last_two_digits:02d}"
-            else:
-                return amount
-        elif isinstance (amount, str):
+        if isinstance(amount, (float, int)):
+            # Ensure the amount is formatted to two decimal places
+            formatted_amount = f"{amount:,.2f}"
+            
+            # Replace commas with underscores
+            formatted_amount = formatted_amount.replace(',', '_')
+            
+            return f"${formatted_amount}"
+        elif isinstance(amount, str):
             return amount
+        else:
+            raise TypeError("Amount must be a number or a string")
         
     @staticmethod
     def deformat_currency(formatted_amount):
         """
-        Converts a formatted currency string back to a float.
-        
+        Deformats a currency string back to a numeric value.
+
         Args:
-            formatted_amount (str): The formatted currency string.
-        
+            formatted_amount (str): The formatted currency amount.
+
         Returns:
-            float: The currency amount as a float.
+            float: The numeric value of the currency amount.
         """
-        try:
-            if isinstance(formatted_amount, float):
-                return float(formatted_amount)
-            elif isinstance(formatted_amount, str):
-            # Remove the dollar sign, commas, and underscores
-                clean_amount = formatted_amount.replace('$', '').replace(',', '').replace('_', '')
-                return float(clean_amount)
-        except ValueError:
-            raise ValueError(f"Invalid formatted amount: {formatted_amount}")
+        if isinstance(formatted_amount, str):
+            # Remove the dollar sign and underscores
+            cleaned_amount = formatted_amount.replace('$', '').replace('_', '')
+            
+            # Convert to float
+            return float(cleaned_amount)
+            
+        elif isinstance( formatted_amount, (int, float)):
+            return float(formatted_amount)
+        
+        else:
+            raise TypeError("Formatted amount must be a string")
         
     def check_bank_modifications(self, players):
         """
@@ -159,9 +162,10 @@ class GameLogic:
         Args:
             player (Player): The Player instance performing the work action.
         """
+        player.bank = self.deformat_currency(player.bank)  # Ensure bank balance is a float
         player.bank += player.job_income
         player.bank = round(player.bank, 2)
-        log(f"{player.name} has worked and earned ${player.job_income}. Bank balance updated to ${player.bank}.")
+        log(f"{player.name} has worked and earned {self.format_currency(player.job_income)}. Bank balance updated to {self.format_currency(player.bank)}.")
 
     def view_other_player_profiles(self, players):
         """
@@ -208,8 +212,8 @@ class GameLogic:
         log(f"  Name: {player.name};")
         log(f"  Age: {player.age};")
         log(f"  Job Title: {player.job_title};")
-        log(f"  Job Income: ${player.job_income};")
-        log(f"  Bank Balance: ${player.bank}")
+        log(f"  Job Income: {self.format_currency(player.job_income)};")
+        log(f"  Bank Balance: {self.format_currency(player.bank)}")
 
     def steal(self, player, players):
         """
@@ -232,15 +236,17 @@ class GameLogic:
                 if target_player:
                     success_rate = random.random()
                     if success_rate > 0.5:  # 50% chance of success
-                        percentage = random.uniform(0.1, 0.3)  # Steal between 10% and 30%
+                        percentage = random.uniform(0.0, 1.0)  # Steal between 0% and 100%
+                        player.bank = self.deformat_currency(player.bank)  # Ensure bank balance is a float
+                        target_player.bank = self.deformat_currency(target_player.bank)
                         amount_stolen = target_player.bank * percentage
                         target_player.bank -= amount_stolen
                         player.bank += amount_stolen
                         target_player.bank = round(target_player.bank, 2)
                         player.bank = round(player.bank, 2)
-                        log(f"Steal successful! {player.name} stole ${amount_stolen:.2f} from {target_player.name}.")
-                        log(f"{target_player.name}'s new bank balance is ${target_player.bank:.2f}.")
-                        log(f"{player.name}'s new bank balance is ${player.bank:.2f}.")
+                        log(f"Steal successful! {player.name} stole {self.format_currency(amount_stolen)} from {target_player.name}.")
+                        log(f"{target_player.name}'s new bank balance is {self.format_currency(target_player.bank)}.")
+                        log(f"{player.name}'s new bank balance is {self.format_currency(player.bank)}.")
                     else:
                         log(f"Steal attempt failed! {player.name} couldn't steal from {target_player.name}.")
                     return True
@@ -285,28 +291,38 @@ class GameLogic:
             
             search_item = options.get(choice)
 
-            lottery_ticket_rewards = [-5, 0, 1, 5, 10, 20, 25, 50, 100, 1_000, 50_000, 1_000_000]
+            lottery_ticket_rewards = [0.5, 0, 1, 5, 10, 20, 25, 50, 100, 1_000, 
+                                      5_000, 10_000, 15_000, 20_000, 25_000,
+                                      50_000, 100_000, 250_000, 500_000, 
+                                      1_000_000, 0.25, 0.10, 2, 15]
 
             if search_item:
                 reward = 0
                 
                 if search_item in ["treasure", 't', '1']:
-                    reward = random.uniform(-100, 1000)
-                    log(f"{player.name} found a treasure worth ${reward:.2f}!")
+                    reward = random.uniform(-1_000, 10_000)
+                    log(f"{player.name} found a treasure worth {self.format_currency(reward)}!")
 
                 elif search_item in ["lottery ticket", 'l', '2', 'lottery', 'ticket']:
-                    reward = random.choice(lottery_ticket_rewards)
-                    log(f"{player.name} bought a lottery ticket and won ${reward:.2f}!")
+                    success_rate = random.random()
+                    if success_rate > 0.9: # 10% of winning
+                        reward = random.choice(lottery_ticket_rewards)
+                        log(f"{player.name} bought a lottery ticket and won {self.format_currency(reward)}!")
+                    else:
+                        reward = -5
+                        log(f"{player.name} bought a lottery ticket and didn't win anything. Lottery ticket cost {self.format_currency(reward)}")
 
                 elif search_item in ["stocks", 's', '3']:
                     reward = random.uniform(-500_000, 1_500_000)
-                    log(f"{player.name} invested in stocks and now has ${reward:.2f}!")
+                    log(f"{player.name} invested in stocks and now has {self.format_currency(reward)}!")
 
-                print(f"Player Bank : ${player.bank} and type is {type(player.bank)}\nReward : ${reward} and type is {type(reward)}")
-                player.bank = float(self.deformat_currency(player.bank)) + reward # Convert bank balance to float before adding
+                # print(f"Player Bank : ${player.bank} and type is {type(player.bank)}\nReward : ${reward:2f} and type is {type(reward)}")
+                reward = self.deformat_currency(reward)
+                player.bank = self.deformat_currency(player.bank)  # Ensure bank balance is a float
+                player.bank += reward
                 player.bank = round(player.bank, 2)
                 new_line()
-                log(f"{player.name}'s new bank balance is ${player.bank:.2f}.")
+                log(f"{player.name}'s new bank balance is {self.format_currency(player.bank)}.")
                 return True
             
             else:
@@ -320,7 +336,7 @@ class Startup:
         gamelogic (GameLogic): An instance of the GameLogic class.
     """
     
-    def __init__(self, gamelogic):
+    def __init__(self, gamelogic, security):
         """
         Initializes the Startup class with an instance of GameLogic.
         
@@ -328,6 +344,7 @@ class Startup:
             gamelogic (GameLogic): An instance of the GameLogic class.
         """
         self.gamelogic = gamelogic
+        self.security = security
 
     def start_setup(self):
         """
@@ -337,7 +354,7 @@ class Startup:
             tuple: A tuple containing the list of Player instances and the round limit.
         """
         try:
-            number_of_users = int(input("\nHow many people are playing? : "))
+            number_of_users = self.security.get_validated_int("Enter the number of players (1-8): ", range(1, 9))
             clear_terminal()
             if not (1 <= number_of_users <= 8):
                 log("Invalid number of players. Please choose between 1 and 8.")
@@ -368,7 +385,7 @@ class Startup:
                 clear_terminal()
                 return True
             elif (ready == "no") or (ready == "n") or (ready == "0"):
-                input("Press the [Enter key] when you are ready to start the game...")
+                str(input("Press the [Enter key] when you are ready to start the game..."))
                 clear_terminal()
                 return True
             else:
@@ -408,15 +425,10 @@ class Startup:
             log(f"   Job Title: {player.job_title};")
             log(f"   Job Income: ${player.job_income};")
             log(f"   Bank: ${player.bank}")
-            # log(f"")
-            # log(f"")
             new_line()
             ready_to_start = input(f"{player.id}. Do you want to change your name? (yes/no): ").lower()
             if (ready_to_start == "yes") or (ready_to_start == "y") or (ready_to_start == "1"):
                 self.enter_custom_names(player)
-            # elif (ready_to_start == "no") or (ready_to_start == "n") or (ready_to_start == "0") or (ready_to_start == ""):
-            #     input("Press the [Enter key] when you are ready to start the game...")
-            #     clear_terminal()
             else:
                 clear_terminal()
 
@@ -452,7 +464,6 @@ class Startup:
         """
         players = []
         for id in range(1, number_of_users + 1):  # Assign unique IDs starting from 1
-            # id = 1 # how to set play ID here
             name = full_name()
             age = random.randint(18, 65)
             job_title, job_income = self.gamelogic.get_job()
@@ -468,7 +479,9 @@ class GamePlay:
         players (list): A list of Player instances representing the players in the game.
         round_limit (int): The maximum number of rounds in the game.
     """
-    
+
+    TEN_MILLION_BANK_BALANCE = 10_000_000.00
+  
     def __init__(self, players, round_limit, gamelogic):
         """
         Initializes the GamePlay class with a list of Player instances and a round limit.
@@ -492,14 +505,17 @@ class GamePlay:
         Starts the game with a turn-based system.
         """
         log("Starting the game!")
+        self.rounds = 0
         
-        for round_num in range(1, self.round_limit + 1):
-            log(f"\nRound {round_num} begins!")
+        while self.rounds < self.round_limit:
             for player in self.players:
                 self.player_turn(player)
-                self.format_player_banks()
-                if self.check_game_end():
-                    return
+            self.rounds += 1
+            log(f"Round {self.rounds} completed.")
+            if self.rounds == self.round_limit:
+                self.check_game_end()
+            else:
+                log(f"Proceeding to Round {self.rounds + 1}.")
 
     def print_player_options(self, player):
         """
@@ -536,7 +552,7 @@ class GamePlay:
             
             if turn >= 5:
                 log(f"Player #{player.id} turn has ended.")
-                input("Press [Enter key] to continue...")
+                new_window()
                 clear_terminal()
                 turn = 0
                 break
@@ -552,20 +568,20 @@ class GamePlay:
                 new_line()
                 self.gamelogic.work(player)
                 turn += 4
-                input("Press [Enter key] to continue...")
+                new_window()
                 clear_terminal()
 
             elif player_actions == "2":
-                self.gamelogic.steal(player, players)
+                self.gamelogic.steal(player, self.players)
                 turn += 1
-                input("Press [Enter key] to continue...")
+                new_window()
                 clear_terminal()
 
             elif player_actions == "3":
                 new_line()
                 self.gamelogic.search(player)
                 turn += 6
-                input("Press [Enter key] to continue...")
+                new_window()
                 clear_terminal()
 
             elif player_actions == "4":
@@ -574,7 +590,7 @@ class GamePlay:
             elif player_actions == "5":
                 new_line()
                 log(f"Player #{player.id} turn has voted to end their turn.")
-                input("Press [Enter key] to continue...")
+                new_window()
                 clear_terminal()
                 break
 
@@ -583,24 +599,58 @@ class GamePlay:
     
     def check_game_end(self):
         """
-        Checks if the game has ended.
-        
-        Returns:
-            bool: True if the game has ended, False otherwise.
+        Checks if the game has reached the end of the rounds and determines the winner.
         """
-        # Placeholder for game end condition
-        # Example: if self.game_over_condition_met():
-        #              log("Game Over!")
-        #              return True
-        #          return False
-        pass
+        if self.rounds == self.round_limit:
+            self.rank_players()
+            self.check_achievements()
+            self.announce_winner()
+    
+    def rank_players(self):
+        """
+        Ranks the players based on their bank balances.
+        """
+        self.players.sort(key=lambda p: self.gamelogic.deformat_currency(p.bank), reverse=True)
 
-# In the main block:
-if __name__ == "__main__":
+    def check_achievements(self):
+        """
+        Checks if any player has reached the target bank balance and logs this achievement.
+        """
+        for player in self.players:
+            if self.gamelogic.deformat_currency(player.bank) >= self.TEN_MILLION_BANK_BALANCE:
+                log(f"Achievement unlocked! {player.name} has reached a bank balance of {self.gamelogic.format_currency(player.bank)}.")
+
+    def announce_winner(self):
+        """
+        Announces the winner and displays the final rankings.
+        """
+        log("Game Over!")
+        log(f"In the {self.round_limit} rounds we had, this is the list of the winners.")
+        new_line()
+        log("Final Rankings:")
+        for rank, player in enumerate(self.players, start=1):
+            log(f"\t{rank}. {player.name} - Bank Balance: {self.gamelogic.format_currency(player.bank)}")
+        new_line()
+        log(f"The winner is {self.players[0].name} with a bank balance of {self.gamelogic.format_currency(self.players[0].bank)}!")
+
+
+def main():
     gamelogic = GameLogic()
-    startup = Startup(gamelogic)
+    security = Security()
+    startup = Startup(gamelogic, security)
     splash_screen()
     players, round_limit = startup.start_setup()
     gameplay = GamePlay(players, round_limit, gamelogic)
     gameplay.start_game()
     gameplay.format_player_banks()  # Format player banks after the game ends
+
+def restart_game():
+    while True:
+        main()
+        restart = input("Do you want to restart the game? (yes/no): ").lower()
+        if restart not in ['yes', 'y', '1']:
+            break
+
+# In the main block:
+if __name__ == "__main__":
+    restart_game()
