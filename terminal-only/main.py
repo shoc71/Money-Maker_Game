@@ -1,23 +1,12 @@
-import os
-from Input_Handling import Security
-from game_logic import GameLogic
-from player_setup import Startup
-from game_play import GamePlay
-
-def splash_screen():
-    """
-    Displays the welcome message for the game.
-    """
-    # Clear command for Windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-    # Clear command for Unix/Linux/MacOS
-    else:
-        _ = os.system('clear')
-    print("Welcome to the game. This is the Money-Game.")
-    print("The one with the most amount of money by the end of this wins.")
+import sys
+from Important_Programs.game_logic import GameLogic
+from Important_Programs.player_setup import Startup
+from Important_Programs.game_play import GamePlay
+from Important_Programs.Input_Handling import Security
+from Important_Programs.ulits import splash_screen
 
 def main():
+    sys.path.append("Important_Programs")
     gamelogic = GameLogic()
     security = Security()
     startup = Startup(gamelogic, security)
@@ -30,7 +19,7 @@ def main():
 def restart_game():
     while True:
         main()
-        restart = input("Do you want to restart the game? (yes/no): ").lower()
+        restart = Security.sanitize_input(input("Do you want to restart the game? (yes/no): ").lower())
         if restart not in ['yes', 'y', '1']:
             break
 

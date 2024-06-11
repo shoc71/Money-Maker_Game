@@ -1,50 +1,5 @@
-from game_logic import GameLogic
-import random
-from names import names
-from Input_Handling import Security
-import os
-
-def log(message):
-    """
-    Logs a message by printing it to the console.
-    
-    Args:
-        message (str): The message to be logged.
-    """
-    return print(message)
-
-def full_name():
-    """
-    Generates a full name by combining a first name and last name from the names list.
-    
-    Returns:
-        str: A full name in the format "First Last".
-    """
-    first_name = random.choice(names).title()
-    last_name = random.choice(names).title()
-    return f"{first_name}, {last_name}"
-
-def splash_screen():
-    """
-    Displays the welcome message for the game.
-    """
-    clear_terminal()
-    log("Welcome to the game. This is the Money-Game.")
-    log("The one with the most amount of money by the end of this wins.")
-
-def clear_terminal():
-    """
-    Clears the terminal screen.
-    """
-    # Clear command for Windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-    # Clear command for Unix/Linux/MacOS
-    else:
-        _ = os.system('clear')
-
-def new_line():
-    return print("\n")
+from .Input_Handling import Security
+from .ulits import log, clear_terminal, new_line
 
 def new_window():
     return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
@@ -137,7 +92,16 @@ class GamePlay:
 
             self.print_player_options(player)
 
-            player_actions = input(f"Choose your action, Player #{player.id}: ").lower()
+            player_actions = Security.get_validated_choice(
+                f"Choose your action, Player #{player.id}: ",
+                ["0", "description", "player description", "d", 
+                 "1", "work", "w", 
+                 "2", "steal", 
+                 "3", "search"
+                 "4", "use_item", "market"
+                 "5", "end turn", "end", "e",
+                 "quit"]
+            ).lower()
 
             if player_actions in ["0", "despriction", "player despriction", "d"]:
                 self.gamelogic.view_other_player_profiles(self.players)
@@ -149,28 +113,31 @@ class GamePlay:
                 new_window()
                 clear_terminal()
 
-            elif player_actions == "2":
+            elif player_actions in ["2", "steal"]:
                 self.gamelogic.steal(player, self.players)
                 turn += 1
                 new_window()
                 clear_terminal()
 
-            elif player_actions == "3":
+            elif player_actions in ["3", "search"]:
                 new_line()
                 self.gamelogic.search(player)
                 turn += 6
                 new_window()
                 clear_terminal()
 
-            elif player_actions == "4":
+            elif player_actions in ["4", "use_item", "market"]:
                 self.use_item(player)
 
-            elif player_actions == "5":
+            elif player_actions in ["5", "end turn", "end", "e"]:
                 new_line()
                 log(f"Player #{player.id} turn has voted to end their turn.")
                 new_window()
                 clear_terminal()
                 break
+
+            elif player_actions == "quit":
+                log(f"{player.name} has been forcefully terminated this program early.")
 
             else:
                 log("Invalid action. Choose between 0 and 5.")

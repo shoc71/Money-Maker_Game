@@ -1,18 +1,7 @@
 import random
-from job_income import jobs
-from names import names
-from Input_Handling import Security
-import os
-from player import Player
-
-def log(message):
-    """
-    Logs a message by printing it to the console.
-    
-    Args:
-        message (str): The message to be logged.
-    """
-    return print(message)
+from .player import Player
+from .ulits import log, clear_terminal, new_line
+from .names import names
 
 def full_name():
     """
@@ -24,32 +13,6 @@ def full_name():
     first_name = random.choice(names).title()
     last_name = random.choice(names).title()
     return f"{first_name}, {last_name}"
-
-def splash_screen():
-    """
-    Displays the welcome message for the game.
-    """
-    clear_terminal()
-    log("Welcome to the game. This is the Money-Game.")
-    log("The one with the most amount of money by the end of this wins.")
-
-def clear_terminal():
-    """
-    Clears the terminal screen.
-    """
-    # Clear command for Windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-    # Clear command for Unix/Linux/MacOS
-    else:
-        _ = os.system('clear')
-
-def new_line():
-    return print("\n")
-
-def new_window():
-    return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
-
 
 class Startup:
     """

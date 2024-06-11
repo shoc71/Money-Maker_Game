@@ -1,13 +1,5 @@
 import re
-
-def log(message):
-    """
-    Logs a message by printing it to the console.
-    
-    Args:
-        message (str): The message to be logged.
-    """
-    return print(message)
+from .ulits import log
 
 class Security:
 

@@ -1,50 +1,7 @@
 import random
-from job_income import jobs
-from names import names
-from Input_Handling import Security
-import os
-
-def log(message):
-    """
-    Logs a message by printing it to the console.
-    
-    Args:
-        message (str): The message to be logged.
-    """
-    return print(message)
-
-def full_name():
-    """
-    Generates a full name by combining a first name and last name from the names list.
-    
-    Returns:
-        str: A full name in the format "First Last".
-    """
-    first_name = random.choice(names).title()
-    last_name = random.choice(names).title()
-    return f"{first_name}, {last_name}"
-
-def splash_screen():
-    """
-    Displays the welcome message for the game.
-    """
-    clear_terminal()
-    log("Welcome to the game. This is the Money-Game.")
-    log("The one with the most amount of money by the end of this wins.")
-
-def clear_terminal():
-    """
-    Clears the terminal screen.
-    """
-    # Clear command for Windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-    # Clear command for Unix/Linux/MacOS
-    else:
-        _ = os.system('clear')
-
-def new_line():
-    return print("\n")
+from .job_income import jobs
+from .Input_Handling import Security
+from .ulits import log, clear_terminal, new_line
 
 def new_window():
     return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
@@ -134,6 +91,23 @@ class GameLogic:
         job_title = jobs_list[0].title()
         job_income = jobs_list[1]
         return job_title.title(), job_income
+    
+    def data_redacted(self, player):
+        """
+        Redacts sensitive data from a player's description.
+        
+        Args:
+            player (Player): The Player instance whose data is to be redacted.
+        
+        Returns:
+            str: A string containing the redacted player description.
+        """
+        return f"Player #{player.id} Information:\n" \
+               f"  Name: REDACTED;\n" \
+               f"  Age: REDACTED;\n" \
+               f"  Job Title: {player.job_title};\n" \
+               f"  Job Income: REDACTED;\n" \
+               f"  Bank Balance: REDACTED"
     
     def work(self, player):
         """
@@ -262,10 +236,17 @@ class GameLogic:
             log("Search options:")
             for key, value in options.items():
                 log(f"  {key}. {value.title()}")
+
+            choice = Security.get_validated_choice(
+                "Choose what to search for (0 to go back): ", [
+                    "0", "cancel",
+                    "1", "t", "treasure", "chest",
+                    "2", "lottery ticket", 'l', 'lottery', 'ticket',
+                    "3", "stocks", 's', 'stock'
+                ]
+            )
             
-            choice = input("Choose what to search for (0 to go back): ")
-            
-            if choice == "0":
+            if choice in ["0", "cancel"]:
                 clear_terminal()
                 return False
             
@@ -307,3 +288,9 @@ class GameLogic:
             
             else:
                 log("Invalid choice. Please choose a valid option.")
+
+    def quit_game(self):
+        """
+        Terminate the program immediately.
+        """
+        exit()
