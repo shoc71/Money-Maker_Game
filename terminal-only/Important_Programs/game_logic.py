@@ -6,11 +6,8 @@ from .ulits import log, clear_terminal, new_line
 def new_window():
     return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
 
-class GameLogic:
-    """
-    Contains the game logic related to jobs, stealing money, and treasures.
-    """
-     
+class BankManagement:
+    @staticmethod
     def format_player_bank(self, player):
         """
         Formats the bank balances of all players in the game.
@@ -33,13 +30,10 @@ class GameLogic:
             str: The formatted currency amount.
         """
         if isinstance(amount, (float, int)):
-            # Ensure the amount is formatted to two decimal places
-            formatted_amount = f"{amount:,.2f}"
-            
-            # Replace commas with underscores
-            formatted_amount = formatted_amount.replace(',', '_')
-            
+            # Ensure the amount is formatted to two decimal places & comma replace with underscores
+            formatted_amount = f"{amount:,.2f}".replace(',', '_') 
             return f"${formatted_amount}"
+        
         elif isinstance(amount, str):
             return amount
         else:
@@ -69,6 +63,7 @@ class GameLogic:
         else:
             raise TypeError("Formatted amount must be a string")
         
+    @staticmethod
     def check_bank_modifications(self, players):
         """
         Checks for any bank modifications among players and formats their currency accordingly.
@@ -80,7 +75,9 @@ class GameLogic:
             if isinstance(player.bank, float):
                 self.format_player_bank(player)
 
-    def get_job(self):
+class Employment:
+    @staticmethod
+    def get_job():
         """
         Randomly selects a job title and job income from the jobs dictionary.
         
@@ -92,7 +89,22 @@ class GameLogic:
         job_income = jobs_list[1]
         return job_title.title(), job_income
     
-    def data_redacted(self, player):
+    @staticmethod
+    def work(player):
+        """
+        Performs work action for the player, increasing their bank balance based on their job income.
+        
+        Args:
+            player (Player): The Player instance performing the work action.
+        """
+        player.bank = BankManagement.deformat_currency(player.bank)  # Ensure bank balance is a float
+        player.bank += player.job_income
+        player.bank = round(player.bank, 2)
+        log(f"{player.name} has worked and earned {BankManagement.format_currency(player.job_income)}."
+            f"Bank balance updated to {BankManagement.format_currency(player.bank)}.")
+
+class PlayerManagement:
+    def data_redacted(player):
         """
         Redacts sensitive data from a player's description.
         
@@ -108,18 +120,6 @@ class GameLogic:
                f"  Job Title: {player.job_title};\n" \
                f"  Job Income: REDACTED;\n" \
                f"  Bank Balance: REDACTED"
-    
-    def work(self, player):
-        """
-        Performs work action for the player, increasing their bank balance based on their job income.
-        
-        Args:
-            player (Player): The Player instance performing the work action.
-        """
-        player.bank = self.deformat_currency(player.bank)  # Ensure bank balance is a float
-        player.bank += player.job_income
-        player.bank = round(player.bank, 2)
-        log(f"{player.name} has worked and earned {self.format_currency(player.job_income)}. Bank balance updated to {self.format_currency(player.bank)}.")
 
     def view_other_player_profiles(self, players):
         """
@@ -140,7 +140,7 @@ class GameLogic:
             except ValueError:
                 log("Invalid input. Please enter a valid player ID.")
 
-    def get_player_by_id(self, players, player_id):
+    def get_player_by_id(players, player_id):
         """
         Retrieves a player by their ID.
         
@@ -155,7 +155,7 @@ class GameLogic:
                 return player
         return None
     
-    def player_description(self, player):
+    def player_description(player):
         """
         Displays the player's description.
         
@@ -166,8 +166,10 @@ class GameLogic:
         log(f"  Name: {player.name};")
         log(f"  Age: {player.age};")
         log(f"  Job Title: {player.job_title};")
-        log(f"  Job Income: {self.format_currency(player.job_income)};")
-        log(f"  Bank Balance: {self.format_currency(player.bank)}")
+        log(f"  Job Income: {BankManagement.format_currency(player.job_income)};")
+        log(f"  Bank Balance: {BankManagement.format_currency(player.bank)}")
+
+class CriminalActivity:
 
     def steal(self, player, players):
         """
@@ -179,28 +181,30 @@ class GameLogic:
         """
         while True:
             try:
-                target_id = Security.get_validated_int("Enter the player ID you want to steal from (0 to cancel): ", range(1, (len(players) + 1)))
+                target_id = Security.get_validated_int("Enter the player ID you want to steal from (0 to cancel): ", 
+                                                       range(1, (len(players) + 1)))
                 if target_id == 0:
                     clear_terminal()
                     return False
                 if target_id == player.id:
                     log("You cannot steal from yourself. Choose another player.")
                     continue
-                target_player = self.get_player_by_id(players, target_id)
+                target_player = PlayerManagement.get_player_by_id(players, target_id)
                 if target_player:
                     success_rate = random.random()
                     if success_rate > 0.5:  # 50% chance of success
                         percentage = random.uniform(0.0, 1.0)  # Steal between 0% and 100%
-                        player.bank = self.deformat_currency(player.bank)  # Ensure bank balance is a float
-                        target_player.bank = self.deformat_currency(target_player.bank)
+                        player.bank = BankManagement.deformat_currency(player.bank)  # Ensure bank balance is a float
+                        target_player.bank = BankManagement.deformat_currency(target_player.bank)
                         amount_stolen = target_player.bank * percentage
                         target_player.bank -= amount_stolen
                         player.bank += amount_stolen
                         target_player.bank = round(target_player.bank, 2)
                         player.bank = round(player.bank, 2)
-                        log(f"Steal successful! {player.name} stole {self.format_currency(amount_stolen)}, roughly ({(percentage*100):.2f})% from {target_player.name}.")
-                        log(f"\t\t{target_player.name}'s new bank balance is {self.format_currency(target_player.bank)}.")
-                        log(f"\t\t{player.name}'s new bank balance is {self.format_currency(player.bank)}.")
+                        log(f"Steal successful! {player.name} stole {BankManagement.format_currency(amount_stolen)},"
+                            f"roughly ({(percentage*100):.2f})% from {target_player.name}.")
+                        log(f"\t\t{target_player.name}'s new bank balance is {BankManagement.format_currency(target_player.bank)}.")
+                        log(f"\t\t{player.name}'s new bank balance is {BankManagement.format_currency(player.bank)}.")
                     else:
                         log(f"Steal attempt failed! {player.name} couldn't steal from {target_player.name}.")
                     return True
@@ -209,6 +213,7 @@ class GameLogic:
             except ValueError:
                 log("Invalid input. Please enter a valid player ID.")
 
+class Exploration:
     def search(self, player):
         """
         Allows the player to choose an item to search for and potentially gain a reward.
@@ -262,35 +267,88 @@ class GameLogic:
                 
                 if search_item in ["treasure", 't', '1','chest']:
                     reward = random.uniform(-1_000, 10_000)
-                    log(f"{player.name} found a treasure worth {self.format_currency(reward)}!")
+                    log(f"{player.name} found a treasure worth {BankManagement.format_currency(reward)}!")
 
                 elif search_item in ["lottery ticket", 'l', '2', 'lottery', 'ticket']:
                     success_rate = random.random()
                     if success_rate > 0.9: # 10% of winning
                         reward = random.choice(lottery_ticket_rewards)
-                        log(f"{player.name} bought a lottery ticket and won {self.format_currency(reward)}!")
+                        log(f"{player.name} bought a lottery ticket and won {BankManagement.format_currency(reward)}!")
                     else:
                         reward = -5
-                        log(f"{player.name} bought a lottery ticket and didn't win anything. Lottery ticket cost {self.format_currency(reward)}")
+                        log(f"{player.name} bought a lottery ticket and didn't win anything."
+                            f"Lottery ticket cost {BankManagement.format_currency(reward)}")
 
                 elif search_item in ["stocks", 's', '3', 'stock']:
                     reward = random.uniform(-500_000, 1_500_000)
-                    log(f"{player.name} invested in stocks and now has {self.format_currency(reward)}!")
+                    log(f"{player.name} invested in stocks and now has {BankManagement.format_currency(reward)}!")
 
                 # print(f"Player Bank : ${player.bank} and type is {type(player.bank)}\nReward : ${reward:2f} and type is {type(reward)}")
-                reward = self.deformat_currency(reward)
-                player.bank = self.deformat_currency(player.bank)  # Ensure bank balance is a float
+                reward = BankManagement.deformat_currency(reward)
+                player.bank = BankManagement.deformat_currency(player.bank)  # Ensure bank balance is a float
                 player.bank += reward
                 player.bank = round(player.bank, 2)
                 new_line()
-                log(f"{player.name}'s new bank balance is {self.format_currency(player.bank)}.")
+                log(f"{player.name}'s new bank balance is {BankManagement.format_currency(player.bank)}.")
                 return True
             
             else:
                 log("Invalid choice. Please choose a valid option.")
 
+class QuitGame:
     def quit_game(self):
         """
         Terminate the program immediately.
         """
         exit()
+
+class GameLogic:
+    """
+    Contains the game logic related to jobs, stealing money, and treasures.
+    """
+    def __init__(self):
+        self.bank_manager = BankManagement()
+        self.employment = Employment()
+        self.player_manger = PlayerManagement()
+        self.crime = CriminalActivity()
+        self.exploration = Exploration()
+        self.quit_game = QuitGame()
+
+    def format_player_bank(self, player):
+        return self.bank_manager.format_player_bank(self, player)
+
+    def format_currency(self, amount):
+        return self.bank_manager.format_currency(amount)
+
+    def deformat_currency(self, formatted_amount):
+        return self.bank_manager.deformat_currency(formatted_amount)
+
+    def check_bank_modifications(self, players):
+        return self.bank_manager.check_bank_modifications(self, players)
+
+    def get_job(self):
+        return self.employment.get_job()
+
+    def work(self, player):
+        return self.employment.work(player)
+
+    def data_redacted(self, player):
+        return self.player_manger.data_redacted(player)
+
+    def view_other_player_profiles(self, players):
+        return self.player_manger.view_other_player_profiles(players)
+
+    def get_player_by_id(self, players, player_id):
+        return self.player_manger.get_player_by_id(players, player_id)
+
+    def player_description(self, player):
+        return self.player_manger.player_description(player)
+
+    def steal(self, player, players):
+        return self.crime.steal(player, players)
+
+    def search(self, player):
+        return self.exploration.search(player)
+
+    def quit_game(self):
+        return self.quit_game()
