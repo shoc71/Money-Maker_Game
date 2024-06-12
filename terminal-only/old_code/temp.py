@@ -1,6 +1,8 @@
+import sys
+sys.path.append("Important_Programs")
 import random
-from job_income import jobs
-from names import names
+from Important_Programs.job_income import jobs
+from Important_Programs.names import names
 from dataclasses import dataclass
 import os
 

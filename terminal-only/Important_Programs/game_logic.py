@@ -295,6 +295,19 @@ class Exploration:
             else:
                 log("Invalid choice. Please choose a valid option.")
 
+class Market:
+    """
+    House, Safe_Deposit_Ticket (one-time-use-only), 
+    """
+    def rando_prices(num_1, num_2):
+        return f"${round(random.uniform(num_1, num_2), 2)}"
+
+    def item_prices():
+        pass
+
+class Item_Storage:
+    pass
+
 class QuitGame:
     def quit_game(self):
         """

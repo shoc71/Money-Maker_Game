@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class Player:
@@ -18,3 +18,5 @@ class Player:
     job_title: str
     job_income: float
     bank: float
+    inventory : list[str] = field(default_factory = list)
+    safe : float
