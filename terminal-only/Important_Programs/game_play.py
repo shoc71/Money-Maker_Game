@@ -63,7 +63,8 @@ class GamePlay:
             2: "Steal",
             3: "Search",
             4: "Use Item",
-            5: "End Turn"
+            5: "Visit Shop",
+            6: "End Turn"
         }
 
         new_line()
@@ -98,8 +99,9 @@ class GamePlay:
                  "1", "work", "w", 
                  "2", "steal", 
                  "3", "search"
-                 "4", "use_item", "market"
-                 "5", "end turn", "end", "e",
+                 "4", "use_item", "u", "i", "item"
+                 "5", "market", "m"
+                 "6", "end turn", "end", "e",
                  "quit"]
             ).lower()
 
@@ -126,10 +128,13 @@ class GamePlay:
                 new_window()
                 clear_terminal()
 
-            elif player_actions in ["4", "use_item", "market"]:
+            elif player_actions in ["4", "use_item", "item", "u", "i"]:
                 self.use_item(player)
 
-            elif player_actions in ["5", "end turn", "end", "e"]:
+            elif player_actions in ["5", "market", "m"]:
+                self.gamelogic.purchase_item(player)
+
+            elif player_actions in ["6", "end turn", "end", "e"]:
                 new_line()
                 log(f"Player #{player.id} turn has voted to end their turn.")
                 new_window()

@@ -18,5 +18,79 @@ class Player:
     job_title: str
     job_income: float
     bank: float
-    inventory : list[str] = field(default_factory = list)
+    inventory : list[str] = field(default_factory=list)
     safe : float
+
+    def redacted_profile(self):
+        """
+        Returns a redacted version of the player's profile.
+        
+        Returns:
+            dict: A dictionary with the redacted profile information.
+        """
+        return {
+                "ID": self.id,
+                "Name": "Redacted",
+                "Age": "Redacted",
+                "Job Title": "Redacted",
+                "Job Income": "Redacted",
+                "Bank": "Redacted",
+                "Inventory": "Redacted",
+                "Safe": "Redacted"
+            }
+    
+    def normal_profile(self):
+        """
+        Returns a normal version of the player's profile.
+        
+        Returns:
+            dict: A dictionary with the redacted profile information.
+        """
+        return {
+                "ID": self.id,
+                "Name": self.name,
+                "Age": self.age,
+                "Job Title": self.job_title,
+                "Job Income": "Redacted",
+                "Bank": "Redacted",
+                "Inventory": "Redacted",
+                "Safe": "Redacted"
+            }
+    
+    def bank_detailed__profile(self):
+        """
+        Returns a normal version of the player's profile.
+        
+        Returns:
+            dict: A dictionary with the player profile information. 
+            Id, Name, Age, Job_Title
+        """
+        return {
+                "ID": self.id,
+                "Name": self.name,
+                "Age": self.age,
+                "Job Title": self.job_title,
+                "Job Income": self.job_income,
+                "Bank": self.bank,
+                "Inventory": "Redacted",
+                "Safe": "Redacted"
+            }
+    
+    def leaked_profile(self):
+        """
+        Returns a normal version of the player's profile.
+        
+        Returns:
+            dict: A dictionary with the player profile information. 
+            Id, Name, Age, Job_Title
+        """
+        return {
+                "ID": self.id,
+                "Name": self.name,
+                "Age": self.age,
+                "Job Title": self.job_title,
+                "Job Income": self.job_income,
+                "Bank": self.bank,
+                "Inventory": self.inventory,
+                "Safe": self.safe
+            }
