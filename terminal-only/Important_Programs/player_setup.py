@@ -154,5 +154,7 @@ class Startup:
             age = random.randint(18, 65)
             job_title, job_income = self.gamelogic.get_job()
             bank = 400.0
-            players.append(Player(id, name, age, job_title, job_income, bank))
+            inventory = []
+            safe = 0
+            players.append(Player(id, name, age, job_title, job_income, bank, inventory, safe))
         return players
