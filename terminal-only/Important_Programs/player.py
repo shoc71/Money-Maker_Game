@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from .item import Item
 
 @dataclass
 class Player:
@@ -18,8 +19,9 @@ class Player:
     job_title: str
     job_income: float
     bank: float
-    inventory : list[str] = field(default_factory=list)
     safe : float
+    inventory : list['Item'] = field(default_factory=list)
+    # safe : float
 
     def redacted_profile(self):
         """
@@ -91,6 +93,6 @@ class Player:
                 "Job Title": self.job_title,
                 "Job Income": self.job_income,
                 "Bank": self.bank,
-                "Inventory": self.inventory,
+                "Inventory": [item.__dict__ for item in self.inventory],
                 "Safe": self.safe
             }

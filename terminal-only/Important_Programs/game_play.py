@@ -98,15 +98,15 @@ class GamePlay:
                 ["0", "description", "player description", "d", 
                  "1", "work", "w", 
                  "2", "steal", 
-                 "3", "search"
-                 "4", "use_item", "u", "i", "item"
-                 "5", "market", "m"
+                 "3", "search",
+                 "4", "use_item", "u", "i", "item",
+                 "5", "market", "m",
                  "6", "end turn", "end", "e",
                  "quit"]
             ).lower()
 
             if player_actions in ["0", "despriction", "player despriction", "d"]:
-                self.gamelogic.view_other_player_profiles(self.players)
+                self.gamelogic.view_other_player_players(self.players)
 
             elif player_actions in ["1", "work", "w"]:
                 new_line()
@@ -132,7 +132,7 @@ class GamePlay:
                 self.use_item(player)
 
             elif player_actions in ["5", "market", "m"]:
-                self.gamelogic.purchase_item(player)
+                self.gamelogic.visit_market(player)
 
             elif player_actions in ["6", "end turn", "end", "e"]:
                 new_line()
@@ -143,6 +143,7 @@ class GamePlay:
 
             elif player_actions == "quit":
                 log(f"{player.name} has been forcefully terminated this program early.")
+                self.gamelogic.quit_game()
 
             else:
                 log("Invalid action. Choose between 0 and 5.")
