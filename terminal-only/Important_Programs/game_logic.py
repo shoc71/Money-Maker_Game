@@ -105,28 +105,17 @@ class Employment:
             f"Bank balance updated to {BankManagement.format_currency(player.bank)}.")
 
 class PlayerManagement:
-    def data_redacted(player):
-        """
-        Redacts sensitive data from a player's description.
-        
-        Args:
-            player (Player): The Player instance whose data is to be redacted.
-        
-        Returns:
-            str: A string containing the redacted player description.
-        """
-        return f"Player #{player.id} Information:\n" \
-               f"  Name: REDACTED;\n" \
-               f"  Age: REDACTED;\n" \
-               f"  Job Title: {player.job_title};\n" \
-               f"  Job Income: REDACTED;\n" \
-               f"  Bank Balance: REDACTED"
+    
 
-    def view_other_player_players(self, current_player, players):
+    def view_other_player_profiles(self, players):
         """
         Allows the current player to view the players of other players.
         """
-        current_player_id = current_player.id
+        total_number_of_ids = len(players)
+        all_players_id = []
+        for p in range(0, total_number_of_ids + 1):
+            all_players_id.append(self.get_player_by_id(players, p))
+
         while True:
             try:
                 player_id = Security.get_validated_int("Enter the player ID you want to view (0 to cancel): ", range(0, (len(players) + 1)))
@@ -134,20 +123,30 @@ class PlayerManagement:
                     clear_terminal()
                     break
                 player = self.get_player_by_id(players, player_id)
-                if player_id != current_player_id:
-                    player = player.redacted_profile()
-                    self.player_description(player)
-                    new_line()
-                elif player_id == current_player_id:
-                    player = player.leaked_profile()
-                    self.player_description(player)
-                    new_line()
+
+                other_players_id = all_players_id.copy()
+                other_players_id.remove(player)
+
+                if player:
+                    if player.id == player_id:
+                        profile = player.leaked_profile()
+                        self.player_description(profile)
+                        new_line()
+                    
+                    elif (player_id not in other_players_id):
+                        player = player.redacted_profile()
+                        self.player_description(player)
+                        new_line()
+                    # elif player_id in all_players_id:
+                    #     profile = player.leaked_profile()
+                    #     self.player_description(profile)
+                    #     new_line()
                 else:
                     log("Invalid player ID. Please try again.")
             except ValueError:
                 log("Invalid input. Please enter a valid player ID.")
 
-    def get_player_by_id(players, player_id):
+    def get_player_by_id(self, players, player_id):
         """
         Retrieves a player by their ID.
         
@@ -157,24 +156,25 @@ class PlayerManagement:
         Returns:
             Player: The Player instance with the given ID, or None if not found.
         """
+
         for player in players:
             if player.id == player_id:
                 return player
         return None
     
-    def player_description(player):
+    def player_description(self, player):
         """
         Displays the player's description.
         
         Args:
             player (Player): The Player instance to describe.
         """
-        log(f"Player #{player.id} Information:")
-        log(f"  Name: {player.name};")
-        log(f"  Age: {player.age};")
-        log(f"  Job Title: {player.job_title};")
-        log(f"  Job Income: {BankManagement.format_currency(player.job_income)};")
-        log(f"  Bank Balance: {BankManagement.format_currency(player.bank)}")
+        # log(f"Player #{player.id} Information:")
+        # log(f"  Name: {player.name};")
+        # log(f"  Age: {player.age};")
+        # log(f"  Job Title: {player.job_title};")
+        # log(f"  Job Income: {BankManagement.format_currency(player.job_income)};")
+        # log(f"  Bank Balance: {BankManagement.format_currency(player.bank)}")
 
         log(f"Player #{player['ID']} Information:")
         log(f"  Name: {player['Name']}")
@@ -326,18 +326,21 @@ class Market:
             list: A list of Item instance.
         """
         return [
-            Item("House", self.random_prices(500_000, 1_000_000), "A safe deposit to store a lot of their money."),
-            Item("Safe Deposit Ticket", self.random_prices(1_000, 5_000), "A one-time-use ticket for a safe deposit.")
+            Item("House", BankManagement.format_currency(self.random_prices(100_000, 1_000_000)), 
+                 "A safe deposit to store a lot of their money."),
+            Item("Safe Deposit Ticket", BankManagement.format_currency(self.random_prices(1_000, 5_000)), 
+                 "A one-time-use ticket for a safe deposit.")
         ]
 
     # House, Safe_Deposit_Ticket (one-time-use-only), 
-    def random_prices(num_1, num_2):
+    def random_prices(self, num_1, num_2):
         return round(random.uniform(num_1, num_2), 2)
 
     def display_items(self):
         """
         Displays the iems available in the shop.
         """
+        new_line()
         log("Items available  in the shop:")
         for idx, item in enumerate(self.items, start=1):
             log(f"{idx}. {item.name} - {item.price} - {item.despriction}")
@@ -358,14 +361,18 @@ class Market:
             clear_terminal()
             return False
         
-        selected_item = self.items[int(choice) - 1]
+        item_index = int(choice) - 1
+        selected_item = self.items[item_index]
+        selected_item.price = float(BankManagement.deformat_currency(selected_item.price))
 
         if player.bank >= selected_item.price:
             player.bank -= selected_item.price
             player.inventory.append(selected_item)
+            new_line()
             log(f"{player.name} bought {selected_item.name} for {BankManagement.format_currency(selected_item.price)}.")
             log(f"New bank balance: {BankManagement.format_currency(player.bank)}")
         else:
+            selected_item.price = (BankManagement.format_currency(selected_item.price))
             log(f"{player.name} does not have enough money to buy {selected_item.name}.")
 
         new_window()
@@ -413,45 +420,8 @@ class GameLogic:
     def data_redacted(self, player):
         return self.player_manger.data_redacted(player)
 
-    # def view_other_player_players(self, players):
-    #     return self.player_manger.view_other_player_players(players)
-
-    def view_other_player_profiles(self, current_player, players):
-        """
-        Displays redacted profiles of all players except the current player.
-        
-        Args:
-            current_player (Player): The player who is viewing the profiles.
-            players (list): List of all Player instances.
-        """
-        for player in players:
-            if player.id != current_player.id:
-                profile = player.redacted_profile()
-                log(f"Player {profile['ID']} - {profile['Name']}")
-                log(f"  Age: {profile['Age']}")
-                log(f"  Job Title: {profile['Job Title']}")
-                log(f"  Job Income: {profile['Job Income']}")
-                log(f"  Bank: {profile['Bank']}")
-                log(f"  Inventory: {profile['Inventory']}")
-                log(f"  Safe: {profile['Safe']}")
-                new_line()
-    
-    def view_own_profile(self, player):
-        """
-        Displays the full profile of the current player.
-        
-        Args:
-            player (Player): The player whose profile is being viewed.
-        """
-        profile = player.leaked_profile()
-        log(f"Player {profile['ID']} - {profile['Name']}")
-        log(f"  Age: {profile['Age']}")
-        log(f"  Job Title: {profile['Job Title']}")
-        log(f"  Job Income: {profile['Job Income']}")
-        log(f"  Bank: {profile['Bank']}")
-        log(f"  Inventory: {profile['Inventory']}")
-        log(f"  Safe: {profile['Safe']}")
-        new_line()
+    def view_other_player_players(self, players):
+        return self.player_manger.view_other_player_profiles(players)
 
     def get_player_by_id(self, players, player_id):
         return self.player_manger.get_player_by_id(players, player_id)
@@ -465,8 +435,8 @@ class GameLogic:
     def search(self, player):
         return self.exploration.search(player)
     
-    def purchase_item(self, player):
-        self.market.purchase_item(player, self.bank_manager)
+    def visit_market(self, player):
+        self.market.purchase_item(player)
 
     def quit_game(self):
         return self.quit_game()

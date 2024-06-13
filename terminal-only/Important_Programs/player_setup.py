@@ -156,5 +156,5 @@ class Startup:
             bank = 400.0
             inventory = []
             safe = 0
-            players.append(Player(id, name, age, job_title, job_income, bank, inventory, safe))
+            players.append(Player(id, name, age, job_title, job_income, bank, safe, inventory))
         return players
