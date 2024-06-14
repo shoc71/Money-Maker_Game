@@ -1,5 +1,6 @@
 from .Input_Handling import Security
 from .ulits import log, clear_terminal, new_line
+from .game_logic import PlayerManagement
 
 def new_window():
     return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
@@ -26,6 +27,7 @@ class GamePlay:
         self.players = players
         self.round_limit = round_limit
         self.gamelogic = gamelogic
+        self.player_management = PlayerManagement()
 
     def format_player_banks(self):
         """
@@ -39,9 +41,11 @@ class GamePlay:
         """
         log("Starting the game!")
         self.rounds = 0
-        
+        # current_player = 0
+
         while self.rounds < self.round_limit:
             for player in self.players:
+                # self.player_management.current_player_index_id(current_player=player, players= self.players)
                 self.player_turn(player)
             self.rounds += 1
             log(f"Round {self.rounds} completed.")
@@ -80,6 +84,9 @@ class GamePlay:
         Args:
             player (Player): The Player instance whose turn it is.
         """
+        self.player_management.set_current_player(player)
+        PlayerManagement.set_current_player(self, player)
+        log(f"It's {player.name}'s turn.")
         turn = 0
         
         while True:
@@ -102,10 +109,12 @@ class GamePlay:
                  "4", "use_item", "u", "i", "item",
                  "5", "market", "m",
                  "6", "end turn", "end", "e",
-                 "quit"]
+                 "quit", "cls", "exit", 'q']
             ).lower()
 
             if player_actions in ["0", "despriction", "player despriction", "d"]:
+                # self.player_management.set_current_player(player)
+                # PlayerManagement.set_current_player(self, player)
                 self.gamelogic.view_other_player_players(self.players)
 
             elif player_actions in ["1", "work", "w"]:
@@ -129,7 +138,7 @@ class GamePlay:
                 clear_terminal()
 
             elif player_actions in ["4", "use_item", "item", "u", "i"]:
-                self.use_item(player)
+                self.gamelogic.use_item(player)
 
             elif player_actions in ["5", "market", "m"]:
                 self.gamelogic.visit_market(player)
@@ -141,7 +150,10 @@ class GamePlay:
                 clear_terminal()
                 break
 
-            elif player_actions == "quit":
+            elif player_actions == "cls":
+                clear_terminal()
+
+            elif player_actions in ["quit", 'q', "exit"]:
                 log(f"{player.name} has been forcefully terminated this program early.")
                 self.gamelogic.quit_game()
 

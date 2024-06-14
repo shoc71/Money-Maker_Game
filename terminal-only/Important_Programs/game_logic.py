@@ -3,6 +3,7 @@ from .job_income import jobs
 from .Input_Handling import Security
 from .item import Item
 from .ulits import log, clear_terminal, new_line
+import sys
 
 def new_window():
     return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
@@ -106,47 +107,60 @@ class Employment:
 
 class PlayerManagement:
     
+    def __init__(self):
+        self.current_player = None
+
+    # @staticmethod
+    # def current_player_index_id(current_player, players):
+    #     # player_id = PlayerManagement.get_player_by_id(current_player, players)
+    #     return player_id
+
+    def set_current_player(self, player):
+        self.current_player = player
 
     def view_other_player_profiles(self, players):
         """
         Allows the current player to view the players of other players.
         """
-        total_number_of_ids = len(players)
-        all_players_id = []
-        for p in range(0, total_number_of_ids + 1):
-            all_players_id.append(self.get_player_by_id(players, p))
+        # if not self.current_player:
+        #     log("Error: Current player is not set.")
+        #     return
 
         while True:
             try:
-                player_id = Security.get_validated_int("Enter the player ID you want to view (0 to cancel): ", range(0, (len(players) + 1)))
+                player_id = Security.get_validated_int(
+                    "Enter the player ID you want to view (0 to cancel): ", 
+                    range(0, (len(players) + 1)))
+                
                 if player_id == 0:
                     clear_terminal()
                     break
-                player = self.get_player_by_id(players, player_id)
 
-                other_players_id = all_players_id.copy()
-                other_players_id.remove(player)
+                player = self.get_player_by_id(player_id, players)
+
+                # PlayerManagement.set_current_player(self, player)
+
+                # log(f"Player Id: #{player_id} - Current_Player_ID : #{self.current_player.id}")
+
+                # if player_id == self.current_player.id:
+                #     log("You cannot view your own profile.")
+                #     continue
 
                 if player:
-                    if player.id == player_id:
-                        profile = player.leaked_profile()
-                        self.player_description(profile)
-                        new_line()
-                    
-                    elif (player_id not in other_players_id):
-                        player = player.redacted_profile()
-                        self.player_description(player)
-                        new_line()
-                    # elif player_id in all_players_id:
-                    #     profile = player.leaked_profile()
-                    #     self.player_description(profile)
-                    #     new_line()
+                    # if player_id == self.current_player.id:
+                    profile = player.leaked_profile()
+                    # else:
+                    #     profile = player.redacted_profile()
+
+                    self.player_description(profile)
+                    new_line()
+
                 else:
                     log("Invalid player ID. Please try again.")
             except ValueError:
                 log("Invalid input. Please enter a valid player ID.")
 
-    def get_player_by_id(self, players, player_id):
+    def get_player_by_id(self, player_id, players):
         """
         Retrieves a player by their ID.
         
@@ -162,28 +176,21 @@ class PlayerManagement:
                 return player
         return None
     
-    def player_description(self, player):
+    def player_description(self, profile):
         """
         Displays the player's description.
         
         Args:
             player (Player): The Player instance to describe.
         """
-        # log(f"Player #{player.id} Information:")
-        # log(f"  Name: {player.name};")
-        # log(f"  Age: {player.age};")
-        # log(f"  Job Title: {player.job_title};")
-        # log(f"  Job Income: {BankManagement.format_currency(player.job_income)};")
-        # log(f"  Bank Balance: {BankManagement.format_currency(player.bank)}")
-
-        log(f"Player #{player['ID']} Information:")
-        log(f"  Name: {player['Name']}")
-        log(f"  Age: {player['Age']}")
-        log(f"  Job Title: {player['Job Title']}")
-        log(f"  Job Income: {player['Job Income']}")
-        log(f"  Bank: {player['Bank']}")
-        log(f"  Inventory: {player['Inventory']}")
-        log(f"  Safe: {player['Safe']}")
+        log(f"Player #{profile['ID']} Information:")
+        log(f"  Name: {profile['Name']}")
+        log(f"  Age: {profile['Age']}")
+        log(f"  Job Title: {profile['Job Title']}")
+        log(f"  Job Income: {BankManagement.format_currency(profile['Job Income'])}")
+        log(f"  Bank: {BankManagement.format_currency(profile['Bank'])}")
+        log(f"  Inventory: {profile['Inventory']}")
+        log(f"  Safe: {BankManagement.format_currency(profile['Safe'])}")
 
 class CriminalActivity:
 
@@ -205,7 +212,7 @@ class CriminalActivity:
                 if target_id == player.id:
                     log("You cannot steal from yourself. Choose another player.")
                     continue
-                target_player = PlayerManagement.get_player_by_id(players, target_id)
+                target_player = PlayerManagement.get_player_by_id(target_id)
                 if target_player:
                     success_rate = random.random()
                     if success_rate > 0.5:  # 50% chance of success
@@ -327,13 +334,24 @@ class Market:
         """
         return [
             Item("House", BankManagement.format_currency(self.random_prices(100_000, 1_000_000)), 
-                 "A safe deposit to store a lot of their money."),
+                 "A safe deposit to store a lot of 'your' money."),
             Item("Safe Deposit Ticket", BankManagement.format_currency(self.random_prices(1_000, 5_000)), 
-                 "A one-time-use ticket for a safe deposit.")
+                 "A one-time-use ticket for a safe deposit."),
+            Item("Bank Note", BankManagement.format_currency(self.random_prices(10, 100)), 
+                 "A bank note worth a specific amount of money.")     
         ]
 
-    # House, Safe_Deposit_Ticket (one-time-use-only), 
     def random_prices(self, num_1, num_2):
+        """
+        Generates a random price within the specified range.
+        
+        Args:
+            num_1 (float): The lower bound of the price range.
+            num_2 (float): The upper bound of the price range.
+        
+        Returns:
+            float: The generated random price.
+        """
         return round(random.uniform(num_1, num_2), 2)
 
     def display_items(self):
@@ -353,7 +371,8 @@ class Market:
             player (Player): The Player instance making the purchase.
         """
         self.display_items()
-        valid_choices = [str(i) for i in range (1, len(self.items) + 1)] + ["0", "cancel"]
+        valid_choices = [str(i) for i in range (1, len(self.items) + 1)] + ["0", "cancel"] + ["h", "house", "1"]
+        valid_choices = valid_choices + ["s", "safe", "2", 'ticket', 'Safe Deposit Ticket', "deposit"]
         choice = Security.get_validated_choice("Enter the item number you want to buy (0 to cancel): ", 
                                                valid_choices)
         
@@ -361,6 +380,12 @@ class Market:
             clear_terminal()
             return False
         
+        elif choice in ["h", "house", "1"]:
+            choice = 1
+
+        elif choice in ["s", "safe", "2", 'ticket', 'Safe Deposit Ticket', "deposit"]:
+            choice = 1
+
         item_index = int(choice) - 1
         selected_item = self.items[item_index]
         selected_item.price = float(BankManagement.deformat_currency(selected_item.price))
@@ -379,12 +404,84 @@ class Market:
         clear_terminal()
         return True
 
+class ItemsUsage:
+
+    @staticmethod
+    def safe_deposit(player):
+        """
+        Put all available cash in the bank into the safe.
+
+        Args:
+            player (Player): The player who is depositing the cash into the safe.
+        """
+        if isinstance(player.bank, float):
+            player.safe += player.bank
+            player.bank = 0
+            log(f"All available cash in bank has been deposited into the safe for {player.name}.")
+        else:
+            log("Bank balance must be a valid number.")
+
+    @staticmethod
+    def use_bank_note(player, bank_note):
+        """
+        Use a bank note item.
+
+        Args:
+            player (Player): The player using the bank note.
+            bank_note (Item): The bank note item being used.
+        """
+        amount = BankManagement.deformat_currency(bank_note.price)
+        player.bank += amount
+        log(f"You used a bank note worth {BankManagement.format_currency(amount)}."
+            f"Your bank balance has been increased by {BankManagement.format_currency(amount)}.")
+
+    @staticmethod
+    def choose_item(player, item_index):
+        """
+        Use an item from the player's inventory.
+
+        Args:
+            player (Player): The player using the item.
+            item_index (int): The index of the item to use in the player's inventory.
+        """
+        if item_index < 0 or item_index >= len(player.inventory):
+            log("Invalid item index.")
+            return
+        
+        selected_item = player.inventory[item_index]
+        if selected_item.name == "Safe Deposit Ticket":
+            ItemsUsage.safe_deposit(player)
+        elif selected_item.name == "Bank Note":
+            ItemsUsage.use_bank_note(player, selected_item)
+        else:
+            log("This item cannot be used.")
+
+    def use_item(player):
+        """
+        Allows the player to use an item from their inventory.
+        """
+        if player.inventory:
+            log("Inventory:")
+            for idx, item in enumerate(player.inventory, start=1):
+                log(f"{idx}. {item.name}")
+            choice = Security.get_validated_int("Enter the item number you want to use (0 to cancel): ", 
+                                                 range(0, len(player.inventory) + 1))
+            if choice == 0:
+                clear_terminal()
+                return
+            item_index = int(choice) - 1
+            ItemsUsage.choose_item(player, item_index)
+        else:
+            log("You have no items in your inventory.")
+
+
 class QuitGame:
-    def quit_game(self):
+    @staticmethod
+    def quit_game():
         """
         Terminate the program immediately.
         """
-        exit()
+        sys.exit()
 
 class GameLogic:
     """
@@ -398,6 +495,7 @@ class GameLogic:
         self.crime = CriminalActivity()
         self.exploration = Exploration()
         self.quit_game = QuitGame()
+        self.item_usage = ItemsUsage
 
     def format_player_bank(self, player):
         return self.bank_manager.format_player_bank(self, player)
@@ -424,7 +522,7 @@ class GameLogic:
         return self.player_manger.view_other_player_profiles(players)
 
     def get_player_by_id(self, players, player_id):
-        return self.player_manger.get_player_by_id(players, player_id)
+        return self.player_manger.get_player_by_id(player_id)
 
     def player_description(self, player):
         return self.player_manger.player_description(player)
@@ -434,6 +532,9 @@ class GameLogic:
 
     def search(self, player):
         return self.exploration.search(player)
+    
+    def use_item(self, player):
+        return self.item_usage.use_item(player)
     
     def visit_market(self, player):
         self.market.purchase_item(player)

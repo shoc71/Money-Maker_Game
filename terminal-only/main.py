@@ -7,11 +7,20 @@ from Important_Programs.ulits import splash_screen
 
 def main():
     sys.path.append("Important_Programs")
-    gamelogic = GameLogic()
     security = Security()
+    
+    # Initialize GameLogic without players initially
+    gamelogic = GameLogic()
+
     startup = Startup(gamelogic, security)
     splash_screen()
+    
+    # Get the players and round limit
     players, round_limit = startup.start_setup()
+    
+    # Reinitialize GameLogic with players
+    # gamelogic = GameLogic()
+    
     gameplay = GamePlay(players, round_limit, gamelogic)
     gameplay.start_game()
     gameplay.format_player_banks()  # Format player banks after the game ends
