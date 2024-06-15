@@ -110,11 +110,6 @@ class PlayerManagement:
     def __init__(self):
         self.current_player = None
 
-    # @staticmethod
-    # def current_player_index_id(current_player, players):
-    #     # player_id = PlayerManagement.get_player_by_id(current_player, players)
-    #     return player_id
-
     def set_current_player(self, player):
         self.current_player = player
 
@@ -122,9 +117,6 @@ class PlayerManagement:
         """
         Allows the current player to view the players of other players.
         """
-        # if not self.current_player:
-        #     log("Error: Current player is not set.")
-        #     return
 
         while True:
             try:
@@ -138,19 +130,8 @@ class PlayerManagement:
 
                 player = self.get_player_by_id(player_id, players)
 
-                # PlayerManagement.set_current_player(self, player)
-
-                # log(f"Player Id: #{player_id} - Current_Player_ID : #{self.current_player.id}")
-
-                # if player_id == self.current_player.id:
-                #     log("You cannot view your own profile.")
-                #     continue
-
                 if player:
-                    # if player_id == self.current_player.id:
                     profile = player.leaked_profile()
-                    # else:
-                    #     profile = player.redacted_profile()
 
                     self.player_description(profile)
                     new_line()
@@ -212,7 +193,7 @@ class CriminalActivity:
                 if target_id == player.id:
                     log("You cannot steal from yourself. Choose another player.")
                     continue
-                target_player = PlayerManagement.get_player_by_id(target_id)
+                target_player = PlayerManagement.get_player_by_id(self, target_id, players)
                 if target_player:
                     success_rate = random.random()
                     if success_rate > 0.5:  # 50% chance of success
@@ -361,7 +342,7 @@ class Market:
         new_line()
         log("Items available  in the shop:")
         for idx, item in enumerate(self.items, start=1):
-            log(f"{idx}. {item.name} - {item.price} - {item.despriction}")
+            log(f"{idx}. {item.name} - {BankManagement.format_currency(item.price)} - {item.despriction}")
 
     def purchase_item(self, player):
         """
@@ -371,8 +352,10 @@ class Market:
             player (Player): The Player instance making the purchase.
         """
         self.display_items()
+        log(f"This is how much you have in your current bank account : {player.bank}")
         valid_choices = [str(i) for i in range (1, len(self.items) + 1)] + ["0", "cancel"] + ["h", "house", "1"]
-        valid_choices = valid_choices + ["s", "safe", "2", 'ticket', 'Safe Deposit Ticket', "deposit"]
+        valid_choices = valid_choices + ["s", "safe", "2", 'ticket', 'Safe Deposit Ticket', "deposit", "sdt"]
+        valid_choices = valid_choices + ["b", "bank", "3", 'note', 'bank note', "bn"]
         choice = Security.get_validated_choice("Enter the item number you want to buy (0 to cancel): ", 
                                                valid_choices)
         
@@ -383,8 +366,11 @@ class Market:
         elif choice in ["h", "house", "1"]:
             choice = 1
 
-        elif choice in ["s", "safe", "2", 'ticket', 'Safe Deposit Ticket', "deposit"]:
-            choice = 1
+        elif choice in ["s", "safe", "2", 'ticket', 'Safe Deposit Ticket', "deposit", "sdt"]:
+            choice = 2
+
+        elif choice in ["b", "bank", "3", 'note', 'bank note', "bn"]:
+            choice = 3
 
         item_index = int(choice) - 1
         selected_item = self.items[item_index]
