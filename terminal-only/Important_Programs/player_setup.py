@@ -2,6 +2,7 @@ import random
 from .player import Player
 from .ulits import log, clear_terminal, new_line
 from .names import names
+from .game_logic import BankManagement
 
 def full_name():
     """
@@ -109,8 +110,10 @@ class Startup:
             log(f"   Name: {player.name};")
             log(f"   Age: {player.age};")
             log(f"   Job Title: {player.job_title};")
-            log(f"   Job Income: ${player.job_income};")
-            log(f"   Bank: ${player.bank}")
+            log(f"   Job Income: {BankManagement.format_currency(player.job_income)};")
+            log(f"   Bank: {BankManagement.format_currency(player.bank)}")
+            log(f"   Inventory: {player.inventory}")
+            log(f"   Safe: {BankManagement.format_currency(player.safe)}")
             new_line()
             ready_to_start = input(f"{player.id}. Do you want to change your name? (yes/no): ").lower()
             if (ready_to_start == "yes") or (ready_to_start == "y") or (ready_to_start == "1"):
@@ -153,7 +156,7 @@ class Startup:
             name = full_name()
             age = random.randint(18, 65)
             job_title, job_income = self.gamelogic.get_job()
-            bank = 400.0
+            bank = 40000.0
             inventory = []
             safe = 0
             players.append(Player(id, name, age, job_title, job_income, bank, safe, inventory))

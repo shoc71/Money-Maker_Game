@@ -86,6 +86,9 @@ class Employment:
         Returns:
             tuple: A tuple containing the job title and job income.
         """
+        shuffle_list = list(jobs.items())
+        random.shuffle(shuffle_list)
+        jobs_list = dict(shuffle_list)
         jobs_list = jobs.popitem()
         job_title = jobs_list[0].title()
         job_income = jobs_list[1]
@@ -284,10 +287,9 @@ class Exploration:
                             f"Lottery ticket cost {BankManagement.format_currency(reward)}")
 
                 elif search_item in ["stocks", 's', '3', 'stock']:
-                    reward = random.uniform(-500_000, 1_500_000)
+                    reward = random.uniform(-1_500_000, 1_500_000)
                     log(f"{player.name} invested in stocks and now has {BankManagement.format_currency(reward)}!")
 
-                # print(f"Player Bank : ${player.bank} and type is {type(player.bank)}\nReward : ${reward:2f} and type is {type(reward)}")
                 reward = BankManagement.deformat_currency(reward)
                 player.bank = BankManagement.deformat_currency(player.bank)  # Ensure bank balance is a float
                 player.bank += reward
@@ -352,7 +354,7 @@ class Market:
             player (Player): The Player instance making the purchase.
         """
         self.display_items()
-        log(f"This is how much you have in your current bank account : {player.bank}")
+        log(f"This is how much you have in your current bank account : {BankManagement.format_currency(player.bank)}")
         valid_choices = [str(i) for i in range (1, len(self.items) + 1)] + ["0", "cancel"] + ["h", "house", "1"]
         valid_choices = valid_choices + ["s", "safe", "2", 'ticket', 'Safe Deposit Ticket', "deposit", "sdt"]
         valid_choices = valid_choices + ["b", "bank", "3", 'note', 'bank note', "bn"]
@@ -403,6 +405,7 @@ class ItemsUsage:
         if isinstance(player.bank, float):
             player.safe += player.bank
             player.bank = 0
+            # log(f"{player.inventory[Item]}")
             log(f"All available cash in bank has been deposited into the safe for {player.name}.")
         else:
             log("Bank balance must be a valid number.")
@@ -437,8 +440,10 @@ class ItemsUsage:
         selected_item = player.inventory[item_index]
         if selected_item.name == "Safe Deposit Ticket":
             ItemsUsage.safe_deposit(player)
+            player.inventory.remove(selected_item)
         elif selected_item.name == "Bank Note":
             ItemsUsage.use_bank_note(player, selected_item)
+            player.inventory.remove(selected_item)
         else:
             log("This item cannot be used.")
 
