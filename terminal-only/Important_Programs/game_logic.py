@@ -6,9 +6,19 @@ from .ulits import log, clear_terminal, new_line
 import sys
 
 def new_window():
+    """
+    Pauses the program until the user presses the Enter key.
+    
+    Returns:
+        str: The sanitized input from the user.
+    """
     return Security.sanitize_input(input("Press the [Enter Key] to continue..."))
 
 class BankManagement:
+    """
+    Manages the bank-related operations including formatting and deforming currency.
+    """
+    
     @staticmethod
     def format_player_bank(self, player):
         """
@@ -78,6 +88,10 @@ class BankManagement:
                 self.format_player_bank(player)
 
 class Employment:
+    """
+    Manages employment-related operations including getting a job and working.
+    """
+    
     @staticmethod
     def get_job():
         """
@@ -109,6 +123,10 @@ class Employment:
             f"Bank balance updated to {BankManagement.format_currency(player.bank)}.")
 
 class PlayerManagement:
+    
+    """
+    Manages player-related operations including setting the current player and viewing profiles.
+    """
     
     def __init__(self):
         self.current_player = None
@@ -177,7 +195,10 @@ class PlayerManagement:
         log(f"  Safe: {BankManagement.format_currency(profile['Safe'])}")
 
 class CriminalActivity:
-
+    """
+    Manages criminal activities including stealing from other players.
+    """
+    
     def steal(self, player, players):
         """
         Allows the player to attempt to steal a percentage of another player's savings.
@@ -221,6 +242,10 @@ class CriminalActivity:
                 log("Invalid input. Please enter a valid player ID.")
 
 class Exploration:
+    """
+    Manages exploration activities including searching for treasure, lottery tickets, and stocks.
+    """
+    
     def search(self, player):
         """
         Allows the player to choose an item to search for and potentially gain a reward.
